@@ -1,0 +1,25 @@
+{
+  "name": "@ext-kit/adapter-kit",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@12.6.0",
+  "description": "Type skeletons for site adapters and external source adapters",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "stub": "unbuild --stub",
+    "build": "unbuild",
+    "typecheck": "tsc --noEmit"
+  }
+}

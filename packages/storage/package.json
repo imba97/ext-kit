@@ -1,0 +1,35 @@
+{
+  "name": "@ext-kit/storage",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@12.6.0",
+  "description": "Reactive cross-context storage with chrome-storage and indexed-db backends",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "stub": "unbuild --stub",
+    "build": "unbuild",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "dependencies": {
+    "@ext-kit/messaging": "workspace:*"
+  },
+  "devDependencies": {
+    "idb": "^8.0.3",
+    "vue": "^3.5.43"
+  }
+}

@@ -1,0 +1,17 @@
+minimumReleaseAgeExcludePrune: true
+
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - why-is-node-running
+
+shellEmulator: true
+
+packages:
+  - packages/*
+
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: true
+  esbuild: true
+  simple-git-hooks: true
+  vue-demi: true

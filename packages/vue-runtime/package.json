@@ -1,0 +1,31 @@
+{
+  "name": "@ext-kit/vue-runtime",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@12.6.0",
+  "description": "createExtensionApp + setupApp for Vue 3 extension pages (sidepanel / popup / options)",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "stub": "unbuild --stub",
+    "build": "unbuild",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "vue": "^3.5.43"
+  }
+}
