@@ -6,6 +6,14 @@
   "packageManager": "pnpm@12.8.1",
   "description": "Shared building blocks for Manifest V3 browser extensions.",
   "license": "MIT",
+  "homepage": "https://github.com/imba97/ext-kit#readme",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:imba97/ext-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/imba97/ext-kit/issues"
+  },
   "scripts": {
     "stub": "pnpm -r run stub",
     "build": "pnpm -r run build",
