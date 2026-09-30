@@ -2,16 +2,18 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 
 /**
- * 给 vite dev server 用的 view 占位 html。
+ * Stub HTML files for the vite dev server.
  *
- * Vite dev server 只能在已有 html 的基础上响应多 entry；`extension/` 目录里的
- * `index.html` 模板在 dev 时会由 vite 编译，但 extension 页面通常还没运行
- * `build` 脚本生成。`stubViewHtml` 把 `views` 的 html 模板按相对路径复制到
- * `extension/`，让 dev server 能直接挂上。
+ * Vite's dev server can only serve multiple entries on top of existing HTML.
+ * The `extension/` directory's `index.html` template is compiled by vite in
+ * dev, but extension pages typically haven't been produced by the `build`
+ * step yet. `stubViewHtml` copies each view's html template (by relative path)
+ * into `extension/`, so the dev server can mount them directly.
  *
- * 为什么不全自动复制：因为业务里 `index.html` 经常依赖 `<script src="/src/...">`
- * 引用，复制后 vite 会自己处理 hash 路由。直接 cp 不够稳，所以留口子让业务方
- * 自定义 transform。
+ * Why not auto-copy everything: business `index.html` files often contain
+ * `<script src="/src/...">` references, and vite handles hash routing after
+ * the copy. A naive `cp` isn't robust, so we leave a hook for the caller to
+ * provide a custom transform.
  */
 export interface StubViewOptions {
   outDir: string

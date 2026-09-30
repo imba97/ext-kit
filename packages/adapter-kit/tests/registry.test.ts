@@ -11,7 +11,7 @@ describe('adapter-kit', () => {
   it('defineSiteAdapter keeps the spec verbatim', () => {
     const boss = defineSiteAdapter({
       id: 'boss',
-      name: 'Boss直聘',
+      name: 'Boss Zhipin',
       matcher: { host: 'www.zhipin.com' },
       scrape: () => ({ title: 'engineer' })
     })

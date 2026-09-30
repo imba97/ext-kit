@@ -53,10 +53,11 @@ describe('extensionViewsPlugin', () => {
     const plugin = extensionViewsPlugin(views)
     const ctx = { filename: 'options/index.html' } as any
     const html = '<html><head></head><body></body></html>'
-    // dev 路径由 process.env.NODE_ENV 决定，单测里设不到；这里直接验证 plugin 结构
+    // The dev branch is decided by process.env.NODE_ENV, which we can't set
+    // from a unit test; verify the plugin structure instead.
     expect(plugin.name).toBe('ext-kit:extension-views')
     expect(typeof plugin.transformIndexHtml).toBe('object')
-    // 触发 handler 也不报错
+    // Invoking the handler must not throw.
     const result = (plugin.transformIndexHtml as any).handler(html, ctx)
     expect(result).toContain('</head>')
   })

@@ -4,20 +4,21 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /**
- * 通用扩展配置 —— background / content / injected 都从这里派生。
+ * Shared extension config — background / content / injected all derive from it.
  *
- * 返回值不是完整的 vite config（缺 build / plugins），需要再走
- * `defineBackgroundConfig` / `defineContentScriptConfig` / `defineInjectedScriptConfig`
- * 各自装上 entries。
+ * The return value is NOT a complete vite config (it lacks `build`/`plugins`
+ * glue); call `defineBackgroundConfig` / `defineContentScriptConfig` /
+ * `defineInjectedScriptConfig` to attach the actual entries.
  *
- * 调用方应该：
+ * Typical caller pattern:
  *
  *   export default defineBackgroundConfig(
  *     defineSharedConfig({ views: [...] }),
  *     { entry: 'background/main.ts', outName: 'background.js' },
  *   )
  *
- * 这样三个 entry 共享一套 alias / autoImport / unocss 配置，避免重复。
+ * This way the three entries share the same alias / autoImport / unocss
+ * configuration instead of duplicating it.
  */
 export async function defineSharedConfig(opts: SharedExtensionOptions): Promise<SharedExtensionConfig> {
   const userConfig = opts.userConfig ?? {}
@@ -25,7 +26,7 @@ export async function defineSharedConfig(opts: SharedExtensionOptions): Promise<
   const rootDir = userConfig.root ?? dirname(fileURLToPath(import.meta.url))
 
   if (opts.vue !== false) {
-    // Vue 是常用项；调用方需要关闭时显式 vue:false
+    // Vue is the common case; opt out explicitly with `vue: false`.
     if ((userConfig as any).vue) {
       plugins.push((userConfig as any).vue)
     }
@@ -36,7 +37,7 @@ export async function defineSharedConfig(opts: SharedExtensionOptions): Promise<
   }
 
   if (opts.unocss !== false) {
-    // UnoCSS：业务模板基本都用了 wind3 + attributify + icons
+    // UnoCSS — downstream templates almost all use wind3 + attributify + icons.
     if ((userConfig as any).unocss) {
       plugins.push((userConfig as any).unocss)
     }
@@ -57,7 +58,7 @@ export async function defineSharedConfig(opts: SharedExtensionOptions): Promise<
 }
 
 /**
- * 给 vite config 加 alias —— ~ → src —— 两个下游都用了。
+ * Add the `~` → `src` alias to a vite config — both downstream projects use it.
  */
 export function withSrcAlias<T extends UserConfig>(config: T, srcDir = 'src'): T {
   const alias = (config.resolve?.alias ?? {}) as Record<string, string>

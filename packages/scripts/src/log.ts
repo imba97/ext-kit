@@ -2,11 +2,13 @@ import process from 'node:process'
 import { blue, cyan, dim, green, magenta, red, yellow } from 'kolorist'
 
 /**
- * 输出带 namespace 前缀的日志 —— 避免脚本之间互相串行时找不到出处。
+ * Logger that emits a namespace-prefixed line — when scripts run in series
+ * you can still tell where each line came from.
  *
- * 设计动机：原来两个项目都用 kolorist.log 但各自实现一份，改成统一函数
- * 后两边都能复用。注意此处只用 kolorist，不用 console-style 转义 —— 已被
- * vite + esbuild 验证过兼容。
+ * Motivation: both downstream projects used to roll their own
+ * `kolorist.log` calls. Unifying them into one function lets both projects
+ * share the implementation. Only `kolorist` is used here (no console-style
+ * escapes) — verified compatible with vite + esbuild.
  */
 export function createLogger(tag: string) {
   const prefix = (color: (s: string) => string) => (msg: string) => `${color(`[${tag}]`)} ${msg}`

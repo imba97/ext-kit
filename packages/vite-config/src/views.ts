@@ -4,13 +4,15 @@ import { resolve } from 'node:path'
 import process from 'node:process'
 
 /**
- * 把 views 翻译成 vite 的 multi-page entries，并给每个 view 注入 dev HMR 用的
- * `<script type="module" src="/@vite/client">` —— 因为 vite 默认只在根 index.html
- * 加 vite client，多页面时其他 html 没有 HMR。
+ * Translate views into vite multi-page entries, and inject the dev HMR
+ * `<script type="module" src="/@vite/client">` into every view — vite only
+ * adds the vite client to the root `index.html` by default, so other html
+ * files in a multi-page setup miss HMR.
  *
- * 实现：返回一个简单的 `transformIndexHtml` 插件。Vite 自身已经支持
- * `build.rollupOptions.input = { name: 'path/to/index.html' }`，不需要再做 html
- * 模板的拷贝；这里只补 HMR client 和 `<meta>` 之类的小修补。
+ * Implementation: a small `transformIndexHtml` plugin. Vite already supports
+ * `build.rollupOptions.input = { name: 'path/to/index.html' }`, so we don't
+ * need to copy html templates — this plugin only adds the HMR client and
+ * minor `<meta>` patches.
  */
 export function extensionViewsPlugin(views: ExtensionView[]): Plugin {
   return {
@@ -24,7 +26,7 @@ export function extensionViewsPlugin(views: ExtensionView[]): Plugin {
         const client = process.env.NODE_ENV !== 'production'
           ? '<script type="module" src="/@vite/client"></script>'
           : ''
-        // 注入在 </head> 前
+        // Inject right before </head>.
         return html.replace('</head>', `${client}\n</head>`)
       }
     }
@@ -32,8 +34,9 @@ export function extensionViewsPlugin(views: ExtensionView[]): Plugin {
 }
 
 /**
- * 给 shared config 装上 views 入口 —— 业务调 `defineConfig(buildExtensionViews(shared))`
- * 即可得到一份能跑多页面的完整 vite config。
+ * Attach the views entries to a shared config — call
+ * `defineConfig(buildExtensionViews(shared))` to get a complete vite config
+ * that runs multiple pages.
  */
 export function buildExtensionViews(shared: SharedExtensionConfig): UserConfig {
   return {

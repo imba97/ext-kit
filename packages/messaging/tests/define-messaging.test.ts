@@ -25,7 +25,8 @@ function createMockBrowser(): { browser: Browser, mock: MockBrowser } {
   })
 
   const sendMessage = vi.fn(async (msg: unknown) => {
-    // 模拟后台：把请求路由到所有监听器，第一个返回非 undefined 的是响应
+    // Simulate the background: route the request to all listeners;
+    // the first one to return a non-undefined value is the response.
     for (const l of messageListeners) {
       const result = await l(msg)
       if (result !== undefined && !(result instanceof Promise && result === undefined))
@@ -87,7 +88,7 @@ describe('defineMessaging', () => {
 
   it('callBackground throws when no listener responds', async () => {
     const m = defineMessaging({ namespace: 'test' })
-    await expect(m.callBackground('no-handler')).rejects.toThrow(/后台没有响应「no-handler」/)
+    await expect(m.callBackground('no-handler')).rejects.toThrow(/Background did not respond to "no-handler"/)
   })
 
   it('callBackground returns the handler result', async () => {
@@ -104,7 +105,7 @@ describe('defineMessaging', () => {
     const m = defineMessaging({ namespace: 'test' })
     m.handleBackgroundRequests({})
 
-    await expect(m.callBackground('unknown')).rejects.toThrow(/后台没有注册消息：unknown/)
+    await expect(m.callBackground('unknown')).rejects.toThrow(/Background has no handler for "unknown"/)
   })
 
   it('handleBackgroundRequests ignores messages from other namespaces', async () => {
@@ -117,7 +118,7 @@ describe('defineMessaging', () => {
       }
     })
 
-    // 直接触发一个伪造消息：来自别的 namespace
+    // Directly trigger a forged message: from a different namespace.
     const listener = mock.runtime.onMessage.addListener.mock.calls[0]?.[0] as Listener
     if (listener) {
       const result = await listener({ namespace: 'other', kind: 'request', id: 'foo' })
@@ -138,9 +139,9 @@ describe('defineMessaging', () => {
 
   it('broadcastToPages is fire-and-forget', () => {
     const m = defineMessaging({ namespace: 'test' })
-    // 没有监听器 —— 不应抛
+    // No listener attached — must not throw.
     expect(() => m.broadcastToPages('news', { hi: 1 })).not.toThrow()
-    return Promise.resolve() // 让 catch 跑完
+    return Promise.resolve() // let the .catch() branch finish
   })
 
   it('onPageBroadcast invokes callback only on matching id', async () => {
@@ -150,8 +151,9 @@ describe('defineMessaging', () => {
     m.onPageBroadcast('a', cbA)
     m.onPageBroadcast('b', cbB)
 
-    // 取出注册的两个 listener（最后一个是 handleBackgroundRequests 之前的 onPageBroadcast，
-    // 因此按注册顺序取出 cbA 与 cbB 的 listener）
+    // Pull out the two registered listeners (the latest two are the
+    // onPageBroadcast calls registered before handleBackgroundRequests, so
+    // grab them in registration order).
     const calls = mock.runtime.onMessage.addListener.mock.calls.map(c => c[0]) as Listener[]
     const listenerA = calls[calls.length - 2]
     const listenerB = calls[calls.length - 1]

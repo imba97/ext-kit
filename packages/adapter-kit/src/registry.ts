@@ -2,10 +2,11 @@ import type { ExternalSourceDescriptor } from './external-source'
 import type { SiteDescriptor } from './site-adapter'
 
 /**
- * 通用注册表 —— 调用方可以一行代码把一组 adapter 注册到全局。
+ * Generic registry — lets callers register a set of adapters into a global
+ * store with a single line.
  *
- * 注意：本包不依赖任何运行时状态（pinia / chrome storage），只是单纯的
- * 列表 + 类型推导。
+ * Note: this package has no runtime dependencies (no pinia, no chrome storage).
+ * It is just a plain list with type inference.
  */
 export class AdapterRegistry<T extends { id: string }> {
   private map = new Map<string, T>()

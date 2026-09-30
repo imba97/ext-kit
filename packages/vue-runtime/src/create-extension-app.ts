@@ -3,9 +3,9 @@ import { createApp } from 'vue'
 import { setupApp } from './setup-app'
 
 /**
- * 构造一个挂载到指定 DOM 节点的 Vue 应用。
+ * Build a Vue app and mount it into a given DOM node.
  *
- * 用法：
+ * Usage:
  *
  * ```ts
  * // sidepanel/main.ts
@@ -16,14 +16,16 @@ import { setupApp } from './setup-app'
  * })
  * ```
  *
- * 注意：扩展页面的挂载点通常是侧边栏 / 弹窗 / 设置页 `<div id="app"></div>`，
- * MV3 页面不像普通 SPA 那样有完整 document，所以不依赖 document.documentElement。
+ * Note: extension pages usually mount into a `<div id="app"></div>` in the
+ * sidepanel / popup / options page. Unlike a normal SPA, an MV3 page does
+ * not always have a fully formed `document.documentElement`, so we don't
+ * rely on it.
  */
 export interface CreateExtensionAppOptions {
   rootComponent: Component
-  /** DOM 选择器；默认 `#app` */
+  /** DOM selector; defaults to `#app`. */
   mountTarget?: string
-  /** 传给 `setupApp` 的副作用钩子 —— Pinia / router / 等 */
+  /** Side-effect hook forwarded to `setupApp` — Pinia / router / telemetry / ... */
   setup?: (app: ReturnType<typeof createApp>) => void | Promise<void>
 }
 

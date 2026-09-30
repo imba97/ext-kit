@@ -3,9 +3,9 @@ import { resolve } from 'node:path'
 import { createLogger } from './log'
 
 /**
- * 把运行时构造的 manifest 写到 extension/manifest.json。
+ * Write a runtime-constructed manifest to `extension/manifest.json`.
  *
- * 用法：
+ * Usage:
  *
  * ```ts
  * // scripts/manifest.ts
@@ -16,15 +16,17 @@ import { createLogger } from './log'
  * })
  * ```
  *
- * 为什么给 manifest 一个函数而不是对象：
- *  - build-time 需要读取一些只在该阶段存在的状态（比如最新版本号）。
- *  - 函数能延迟到调用时才求值，避免「写文件时拿到过期对象」的隐患。
+ * Why a function instead of an object:
+ *  - At build time you may need to read state that only exists then
+ *    (e.g. the latest version number).
+ *  - A function defers evaluation until the call site, avoiding the
+ *    "writes a stale object to disk" trap.
  */
 export interface WriteManifestOptions {
   outDir: string
-  /** 业务侧定义 manifest 的工厂函数 */
+  /** Caller-side factory that produces the manifest. */
   manifest: () => Record<string, unknown> | Promise<Record<string, unknown>>
-  /** 默认文件名 */
+  /** Default file name. */
   fileName?: string
 }
 

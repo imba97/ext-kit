@@ -5,11 +5,12 @@ import process from 'node:process'
 import { defineConfig } from 'vite'
 
 /**
- * 内容脚本入口 —— 普通 ESM，多 entry。
+ * Content script entry — regular ESM, multi-entry.
  *
- * 注意：Vite 在 Vite 8 之前对 `format: 'iife'` 的 content script 不会自动定义
- * `process.env.NODE_ENV`，需要手动 `define` 一下（见 background 配置）；
- * content 脚本如果也用了同一套条件逻辑，就一并补上。
+ * Note: Prior to Vite 8, content scripts emitted as `format: 'iife'` did not
+ * have `process.env.NODE_ENV` defined automatically; you had to set it
+ * manually via `define` (see the background config). If your content
+ * script uses the same conditional logic, add the define here too.
  */
 export function defineContentScriptConfig(
   shared: SharedExtensionConfig,

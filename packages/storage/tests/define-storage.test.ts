@@ -3,13 +3,13 @@ import { createMemoryDriver, defineStorage } from '../src/index'
 
 describe('defineStorage (memory backend)', () => {
   beforeEach(() => {
-    // 每个 case 重置 globalThis 残留
+    // Reset any globalThis leftover from a previous case.
     delete (globalThis as { browser?: unknown }).browser
   })
 
   it('reads defaultValue before ready() resolves nothing', async () => {
     const driver = createMemoryDriver(undefined)
-    // 第一次 read() 返回 undefined => 走 defaultValue
+    // First read() returns undefined => defaultValue is used.
     expect(await driver.read()).toBeUndefined()
   })
 
@@ -24,7 +24,8 @@ describe('defineStorage (memory backend)', () => {
   })
 
   it('two stores with the same backend reflect each other via the shared bus', async () => {
-    // 两个 store 共享同一个 driver 才能跨上下文同步，验证一下 subscribe 不回环
+    // Two stores sharing the same driver would normally be the only way
+    // to get cross-context sync — verify that subscribe doesn't echo.
     const driver = createMemoryDriver({ a: 1 })
     const seen: unknown[] = []
     driver.subscribe(v => seen.push(v))
@@ -52,8 +53,8 @@ describe('defineStorage (memory backend)', () => {
   })
 
   it('serialize+normalize pair round-trips through raw string', async () => {
-    // serialize/normalize 是 chrome.storage 边界处使用 —— 这里模拟：
-    // 写进去的是 JSON 字符串（message），读回来后还原。
+    // serialize/normalize are used at the chrome.storage boundary — simulate
+    // by writing a JSON string (the message) and reading it back as an object.
     const api = defineStorage<{ x: number }>({
       key: 'k2',
       defaultValue: { x: 0 },
@@ -88,7 +89,7 @@ describe('chrome-storage backend (mocked)', () => {
       get: vi.fn(async (k: string) => ({ [k]: local._data[k] })),
       set: vi.fn(async (obj: Record<string, unknown>) => {
         Object.assign(local._data, obj)
-        // 触发 onChanged
+        // Fire onChanged so subscribers get notified.
         for (const [key, value] of Object.entries(obj)) {
           onChanged._fire(key, value)
         }

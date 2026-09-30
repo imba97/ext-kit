@@ -1,34 +1,38 @@
 /**
- * 「外部数据源」骨架 —— 来自 offer-hunter 的 ResumeSource 抽象。
+ * "External data source" skeleton — derived from the ResumeSource abstraction
+ * in offer-hunter.
  *
- * 常见实现：gist / paste / 本地文件 / 远程 API。
- * 各自负责把外部数据规整成统一的 Resume 数据格式，然后由 storage 统一收纳。
+ * Common implementations: gist / paste / local file / remote API.
+ * Each source is responsible for normalizing external data into the unified
+ * Resume shape, after which the storage layer takes over.
  */
 
 export interface ExternalSourceFetchResult<TData> {
-  /** 原始数据；后续 reconcile 用 */
+  /** Raw data; consumed by reconciliation. */
   data: TData
-  /** 来源 metadata —— 时间戳 / 作者 / hash 等，方便做缓存与冲突解决 */
+  /** Source metadata — timestamp / author / hash etc., for caching and conflict resolution. */
   meta: Record<string, unknown>
 }
 
 export interface ExternalSourceDescriptor<TConfig, TData> {
   id: string
-  /** 展示名 */
+  /** Display name */
   name: string
-  /** UI 上的简单描述 */
+  /** Short description shown in the UI */
   description?: string
-  /** 默认配置 —— UI 用它做表单初值 */
+  /** Default config — used by the UI as the form initial value */
   defaultConfig: TConfig
-  /** 抓取最新数据 */
+  /** Fetch the latest data */
   fetch: (config: TConfig) => Promise<ExternalSourceFetchResult<TData>>
   /**
-   * 把外部数据规整成统一 Resume —— 决定字段归属、合并、丢弃。
+   * Normalize external data into the unified Resume shape — decides field
+   * ownership, merging, and what to drop.
    */
   normalize?: (data: TData, config: TConfig) => unknown
   /**
-   * 校验配置是否合法 —— 比如 gist 模式下要校验 token 非空。
-   * UI 上 disable fetch 按钮 / 后台拒绝请求都用它。
+   * Validate the config — e.g. gist mode requires a non-empty token.
+   * Used by the UI to disable the fetch button and by the background to
+   * reject requests.
    */
   validate?: (config: TConfig) => true | string
 }

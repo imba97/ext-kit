@@ -5,13 +5,15 @@ import process from 'node:process'
 import { defineConfig } from 'vite'
 
 /**
- * 注入到页面 MAIN world 的脚本 —— IIFE 格式。
+ * Script injected into the page's MAIN world — IIFE format.
  *
- * 与 content 的差别：
+ * Differences from the content script:
  *
- *  - MAIN world 里 `window.chrome` 不存在，必须挂载到 IIFE 的局部变量上。
- *  - 任何对 `chrome.*` 的访问都要走 import 进来的 webextension-polyfill
- *    或者 page world 中转 —— 这里只负责打包形态。
+ *  - In the MAIN world `window.chrome` does not exist; it must be exposed
+ *    via an IIFE local variable.
+ *  - Any `chrome.*` access has to go through the imported
+ *    webextension-polyfill or be relayed from the page world — this file
+ *    only takes care of the bundling shape.
  */
 export function defineInjectedScriptConfig(
   shared: SharedExtensionConfig,

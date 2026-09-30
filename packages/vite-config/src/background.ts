@@ -5,10 +5,11 @@ import process from 'node:process'
 import { defineConfig } from 'vite'
 
 /**
- * 后台入口（service worker）—— IIFE 格式、单文件。
+ * Background entry (service worker) — IIFE format, single file.
  *
- * 注意：MV3 的 service worker 必须 IIFE 输出，esbuild / rollup 都默认 ESM，
- * 这里要显式 format:'iife' + inlineDynamicImports。
+ * Note: MV3 service workers MUST be IIFE output. esbuild/rollup default to
+ * ESM, so we must explicitly set `format: 'iife'` and
+ * `inlineDynamicImports` here.
  */
 export function defineBackgroundConfig(
   shared: SharedExtensionConfig,
@@ -20,8 +21,9 @@ export function defineBackgroundConfig(
     root,
     plugins: shared.plugins,
     define: {
-      // Vite 8 在 IIFE 下默认不写 process.env.NODE_ENV，但 background
-      // 经常引用它做 dev-only 分支 —— 显式定义。
+      // Vite 8 does not write `process.env.NODE_ENV` by default under IIFE,
+      // but background code often branches on it for dev-only logic — set
+      // it explicitly.
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),
       ...(shared.userConfig.define as Record<string, string> | undefined)
     },

@@ -13,15 +13,18 @@ const STORE = 'kv'
 const DB_VERSION = 1
 
 /**
- * 全局单例 IDB 连接 —— 同一个数据库版本下多次 `openDB` 都会拿到同一个
- * 内部连接（idb 包内部也缓存），所以这里的 Map 主要用来跨测试复用。
+ * Global singleton IDB connection — multiple `openDB` calls for the same
+ * database version return the same underlying connection (the `idb` package
+ * also caches internally), so this Map primarily exists to share the
+ * connection across tests.
  */
 const connCache = new Map<string, Promise<IDBPDatabase<ExtKitDb>>>()
 
 async function openDb(databaseName: string): Promise<IDBPDatabase<ExtKitDb>> {
   let pending = connCache.get(databaseName)
   if (!pending) {
-    // 动态 import —— 没装 idb 的环境（纯 chrome-storage-only 项目）不会报错
+    // Dynamic import — environments without `idb` (e.g. chrome-storage-only
+    // projects) won't fail to load this module.
     const { openDB } = await import('idb')
     pending = openDB<ExtKitDb>(databaseName, DB_VERSION, {
       upgrade(db) {
@@ -35,10 +38,11 @@ async function openDb(databaseName: string): Promise<IDBPDatabase<ExtKitDb>> {
 }
 
 /**
- * IndexedDB 后端。
+ * IndexedDB backend.
  *
- * MV3 service worker 内 IndexedDB 完全可用。跨标签 / 跨扩展页面的同步靠
- * `BroadcastChannel` —— chrome.storage 的 onChanged 是浏览器原生，这里得自己拼。
+ * IndexedDB is fully available inside the MV3 service worker.
+ * Cross-tab / cross-extension-page sync uses `BroadcastChannel` — chrome.storage
+ * has `onChanged` for free; here we assemble it ourselves.
  */
 export function createIndexedDbDriver(key: string, initial: unknown): BackendDriver<unknown> {
   let dbPromise: Promise<IDBPDatabase<ExtKitDb>> | undefined
@@ -49,8 +53,9 @@ export function createIndexedDbDriver(key: string, initial: unknown): BackendDri
     return dbPromise
   }
 
-  // 用 BroadcastChannel 做跨标签同步
-  // channel 名带 key 避免不同业务误同步
+  // Use BroadcastChannel for cross-tab sync.
+  // The channel name includes the key to prevent unrelated stores from syncing
+  // into each other.
   const channelName = `${DB_NAME}:${key}`
   const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(channelName) : undefined
   const listeners = new Set<(value: unknown) => void>()

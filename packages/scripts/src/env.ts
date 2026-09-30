@@ -1,7 +1,8 @@
 /**
- * 运行时环境判定 —— 仅依赖标准库，方便在 build-time 与 extension-runtime 复用。
+ * Runtime environment detection — only depends on standard globals, so the
+ * same code can run at build time and inside the extension runtime.
  *
- * 这两个函数两个下游项目里 byte-identical：
+ * These two functions are byte-identical in both downstream projects:
  *  - offer-hunter/src/env.ts
  *  - btools-vitesse/src/env.ts
  */
@@ -14,10 +15,12 @@ export function isFirefox(): boolean {
 }
 
 /**
- * 不允许扩展运行的协议 / host —— chrome://、about:、file://、edge:// 等。
+ * Protocols / hosts where the extension must not run — chrome://, about:,
+ * file://, edge://, etc.
  *
- * 历史踩坑：直接 `!url.startsWith('http')` 漏掉 moz-extension:// 这类自身扩展页面，
- * `includes('://')` 同时排除了 file://、chrome://、edge://、about:。
+ * Historical pitfall: a naive `!url.startsWith('http')` misses schemes like
+ * `moz-extension://` (the extension's own pages); `includes('://')` together
+ * with the explicit scheme list covers file://, chrome://, edge://, about:.
  */
 export function isForbiddenUrl(url: string): boolean {
   return url.startsWith('chrome://')

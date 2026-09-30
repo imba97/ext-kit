@@ -1,26 +1,28 @@
 import type { StorageBackend } from './types'
 
-// idb-backend 的实现单独 import，避免在测试或 chrome-only 环境里加载 idb
+// The idb backend is imported separately to avoid loading `idb` in tests
+// or chrome-only environments.
 import { createIndexedDbDriver } from './idb-backend'
 
 /**
- * 后端基类 —— `chrome-storage` / `memory` 都实现这套；
- * `indexed-db` 因为走 `idb` 包，单独一份适配。
+ * Backend base contract — `chrome-storage` and `memory` both implement this;
+ * `indexed-db` uses the `idb` package, so it gets its own adapter.
  */
 export interface BackendDriver<T> {
-  /** 读取当前值，没有则返回 `undefined` */
+  /** Read the current value; return `undefined` if absent. */
   read: () => Promise<unknown | undefined>
-  /** 写入当前值，传 `undefined` 等价于删除 */
+  /** Write the current value; passing `undefined` is equivalent to deletion. */
   write: (value: T) => Promise<void>
-  /** 删除该 key 下的值 */
+  /** Remove the value at this key. */
   remove: () => Promise<void>
-  /** 监听其他上下文写入 —— 自身写入不能再次触发 */
+  /** Listen for writes from other contexts — a self-write must NOT re-trigger. */
   subscribe: (listener: (value: unknown) => void) => () => void
 }
 
 /**
- * 把 `(chrome storage onChanged payload)` 里和当前 key 相关的项整理成 raw。
- * chrome.storage 的 onChanged 是按 storageArea 分组，把 key → { oldValue, newValue }。
+ * Pull the entry relevant to the current key out of a `chrome.storage`
+ * `onChanged` payload. `onChanged` is grouped by storageArea and maps
+ * `key → { oldValue, newValue }`.
  */
 function diffByKey(change: Record<string, { newValue?: unknown }>, key: string): unknown {
   return change[key]?.newValue
@@ -31,20 +33,20 @@ export function createChromeStorageDriver(key: string): BackendDriver<unknown> {
     async read() {
       const browser = (globalThis as { browser?: any }).browser
       if (!browser?.storage?.local)
-        throw new Error('chrome storage 不可用 —— 请确认你在扩展上下文中调用')
+        throw new Error('chrome.storage is not available — make sure you call this from an extension context')
       const got = await browser.storage.local.get(key)
       return got?.[key]
     },
     async write(value) {
       const browser = (globalThis as { browser?: any }).browser
       if (!browser?.storage?.local)
-        throw new Error('chrome storage 不可用 —— 请确认你在扩展上下文中调用')
+        throw new Error('chrome.storage is not available — make sure you call this from an extension context')
       await browser.storage.local.set({ [key]: value })
     },
     async remove() {
       const browser = (globalThis as { browser?: any }).browser
       if (!browser?.storage?.local)
-        throw new Error('chrome storage 不可用 —— 请确认你在扩展上下文中调用')
+        throw new Error('chrome.storage is not available — make sure you call this from an extension context')
       await browser.storage.local.remove(key)
     },
     subscribe(listener) {
@@ -65,8 +67,8 @@ export function createChromeStorageDriver(key: string): BackendDriver<unknown> {
 }
 
 /**
- * 内存后端 —— 单元测试时用。`subscribe` 用 `EventTarget` 模拟，跨上下文
- * 同步当然是不存在的。
+ * In-memory backend — used by unit tests. `subscribe` is simulated with
+ * `EventTarget`; cross-context sync obviously does not exist here.
  */
 export function createMemoryDriver(initial: unknown): BackendDriver<unknown> & { __value: unknown } {
   let value = initial
@@ -94,7 +96,7 @@ export function createMemoryDriver(initial: unknown): BackendDriver<unknown> & {
 }
 
 /**
- * 工厂：按 backend 名字构造对应 driver。
+ * Factory: build the matching driver for a backend name.
  */
 export function createBackendDriver(
   backend: StorageBackend,
@@ -107,7 +109,8 @@ export function createBackendDriver(
     case 'memory':
       return createMemoryDriver(initialValue)
     case 'indexed-db':
-      // IDB 异步加载 + 监听器实现都在 idb-backend.ts，避免与 idb 包耦合
+      // IDB async loading and listener implementation live in idb-backend.ts
+      // to keep this module decoupled from the `idb` package.
       return createIndexedDbDriver(key, initialValue)
   }
 }

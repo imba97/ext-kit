@@ -2,41 +2,43 @@ import type { Browser } from 'webextension-polyfill'
 import { isEnvelope, makeBroadcast, makeRequest } from './envelope'
 
 /**
- * 页面请求的处理函数。`data` 由各 handler 自己收窄。
+ * Handler for page requests. `data` is narrowed by each handler.
  *
- * 抛错由 webextension-polyfill 转成 Error 抛回调用方，调用方 try/catch 照旧生效。
+ * Errors thrown here are wrapped into a real Error by webextension-polyfill
+ * and surface back to the caller, so existing try/catch keeps working.
  */
 export type BackgroundRequestHandler = (data: any) => unknown
 
 export interface MessagingOptions {
   /**
-   * 命名空间，必须全局唯一。
+   * Namespace — must be globally unique.
    *
-   * 推荐使用项目名（如 `'offer-hunter'`、`'btools'`），浏览器扩展之间
-   * runtime 消息是互通的，不加 namespace 会撞名。
+   * Recommended to use the project name (e.g. `'offer-hunter'`, `'btools'`).
+   * Browser extensions share the runtime message channel; without a
+   * namespace, messages from other extensions will collide with yours.
    */
   namespace: string
 }
 
 export interface MessagingApi {
-  /** 扩展页面 → 后台：发请求并等返回值 */
+  /** Extension page → background: send a request and await its return value. */
   callBackground: <T>(id: string, data?: unknown) => Promise<T>
-  /** 后台：注册一批页面请求的处理函数（必须在 SW 顶层同步注册） */
+  /** Background: register a batch of page request handlers (must run synchronously at the top level of the SW). */
   handleBackgroundRequests: (handlers: Record<string, BackgroundRequestHandler>) => void
-  /** 后台 → 所有扩展页面：单向通知 */
+  /** Background → all extension pages: one-way notification. */
   broadcastToPages: <T>(id: string, data?: T) => void
-  /** 扩展页面：订阅后台广播，返回注销函数 */
+  /** Extension page: subscribe to background broadcasts; returns an unsubscribe function. */
   onPageBroadcast: <T>(id: string, callback: (data: T) => void) => () => void
 }
 
 /**
- * 构造一个命名空间隔离的消息通道。
+ * Build a namespace-isolated messaging channel.
  *
- * `browser` 来自 `webextension-polyfill`，由调用方注入。注入而非全局直接 `import`
- * 是为了：
- *  - 让本包能在测试里换 mock；
- *  - 让调用方决定要不要 polyfill；
- *  - 避免把 webextension-polyfill 引入到不需要的包。
+ * `browser` comes from `webextension-polyfill` and is injected by the caller.
+ * Injection (rather than a global `import`) is intentional:
+ *  - lets this package swap in mocks during testing;
+ *  - lets the caller decide whether to polyfill at all;
+ *  - keeps webextension-polyfill out of consumers that don't need it.
  */
 export function defineMessaging(opts: MessagingOptions): MessagingApi {
   const check = isEnvelope(opts.namespace)
@@ -48,7 +50,7 @@ export function defineMessaging(opts: MessagingOptions): MessagingApi {
       throw new Error('webextension-polyfill not available; call this from an extension context')
     const response = await browser.runtime.sendMessage(message) as T | undefined
     if (response === undefined)
-      throw new Error(`后台没有响应「${id}」，请刷新页面或重新打开扩展页面后重试`)
+      throw new Error(`Background did not respond to "${id}" — try refreshing the page or reopening the extension view`)
     return response
   }
 
@@ -57,20 +59,24 @@ export function defineMessaging(opts: MessagingOptions): MessagingApi {
     if (!browser)
       throw new Error('webextension-polyfill not available; call this from an extension context')
     browser.runtime.onMessage.addListener((message: unknown) => {
-      // 广播是单向通知，后台自己也会收到自己发的广播 —— 这里只处理请求
+      // Broadcasts are one-way; the background also receives its own broadcasts.
+      // Only handle requests here.
       if (!check(message) || message.kind !== 'request')
         return undefined
 
       const handler = handlers[message.id]
       if (!handler) {
         /*
-          出现这个错误只有一种现实解释：**页面比后台新**。
-          页面与后台是两个分开的构建产物，而且 MV3 的 service worker 不会跟着
-          页面刷新一起换新 —— 页面按 F5 会重新读盘，SW 却要「重载扩展」才会换。
-          症状因此很像 bug：界面上明明有某个按钮，点下去却说后台不认识它。
+          This error has exactly one real-world explanation: **the page is newer
+          than the background**. Pages and the background are two separate build
+          artifacts, and the MV3 service worker does not refresh together with a
+          page reload — pressing F5 reloads the page, but the SW only changes
+          when you "Reload extension" on the extensions page. The symptom looks
+          a lot like a bug: a button is clearly there in the UI, yet clicking it
+          says the background doesn't know about it.
         */
         return Promise.reject(new Error(
-          `后台没有注册消息：${message.id} —— 后台代码可能还是旧的，请到浏览器扩展管理页重新加载一次本扩展`
+          `Background has no handler for "${message.id}" — the background code may be stale; please reload the extension from the browser's extensions page`
         ))
       }
 
@@ -84,7 +90,7 @@ export function defineMessaging(opts: MessagingOptions): MessagingApi {
       return
     const message = makeBroadcast<T>(opts.namespace, id, data)
     browser.runtime.sendMessage(message).catch(() => {
-      // 没有页面在听（侧边栏没打开）—— 推送本来就是尽力而为
+      // No page is listening (e.g. sidepanel is closed) — broadcasting is best-effort.
     })
   }
 

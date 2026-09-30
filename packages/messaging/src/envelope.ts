@@ -1,7 +1,8 @@
 import type { BroadcastMessage, Envelope, RequestMessage } from './types'
 
 /**
- * 类型守卫：只处理来自同一 namespace 的消息，避免误处理第三方来源。
+ * Type guard: only accept messages from the same namespace, so messages from
+ * third parties (other extensions) are ignored.
  */
 export function isEnvelope(namespace: string) {
   return function check(value: unknown): value is Envelope {
@@ -11,14 +12,14 @@ export function isEnvelope(namespace: string) {
 }
 
 /**
- * 构造一个 request 信封。
+ * Build a request envelope.
  */
 export function makeRequest(namespace: string, id: string, data?: unknown): RequestMessage {
   return { namespace, kind: 'request', id, data }
 }
 
 /**
- * 构造一个 broadcast 信封。
+ * Build a broadcast envelope.
  */
 export function makeBroadcast<T>(namespace: string, id: string, data?: T): BroadcastMessage<T> {
   return { namespace, kind: 'broadcast', id, data }

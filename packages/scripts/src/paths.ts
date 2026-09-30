@@ -1,10 +1,11 @@
 import { resolve } from 'node:path'
 
 /**
- * 「项目根目录」工具 —— Vite 的 `import.meta.url` 在 build 阶段也会变，所以
- * 这里只允许业务方显式传入项目根。脚本统一走 `r()` 而不是各处自己拼 `path.resolve`。
+ * "Project root" utilities — Vite's `import.meta.url` changes during build,
+ * so we require the caller to pass the project root explicitly. Scripts go
+ * through `r()` instead of every site calling `path.resolve` on its own.
  *
- * 用法：
+ * Usage:
  * ```ts
  * // scripts/manifest.ts
  * const r = (p) => resolve(__dirname, '..', p)
@@ -21,8 +22,9 @@ export function paths(rootDir: string) {
 }
 
 /**
- * 一行解析：避免在每个文件里都 `resolve(__dirname, '..', p)`。
- * 默认项目根为调用文件所在目录的上一级（适合放在 scripts/ 子目录下）。
+ * One-liner resolver: avoids `resolve(__dirname, '..', p)` at every callsite.
+ * The default project root is one level above the calling file (convenient for
+ * scripts that live in a `scripts/` subdirectory).
  */
 export function r(rootDir: string, ...parts: string[]): string {
   return resolve(rootDir, ...parts)

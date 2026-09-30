@@ -1,39 +1,41 @@
 import type { UserConfig } from 'vite'
 
 /**
- * 「页面 view」—— 侧边栏 / 弹窗 / 设置页 / 任意一个打开的独立页面。
+ * "Page view" — sidepanel / popup / options page / any other standalone
+ * page that the extension can open.
  *
- * 之所以单独抽出来：viteserve 通过一个 html 模板承载多个 view，靠 manifest 里的
- * `chrome_url_overrides.newtab` 等字段决定该 html 在哪里被打开。
+ * Why we have this concept: vitesse-style serving uses a single html template
+ * to host multiple views, and the manifest's `chrome_url_overrides.newtab`
+ * (and similar) decides where that html is opened.
  */
 export interface ExtensionView {
-  /** 唯一 id，用于 vite `input` 字段 */
+  /** Unique id, used as the key for vite's `input` field. */
   name: string
-  /** 相对于 src/ 的入口，例如 `sidepanel/main.ts` */
+  /** Entry relative to `src/`, e.g. `sidepanel/main.ts`. */
   entry: string
-  /** 相对于根目录的 html 模板，例如 `sidepanel/index.html` */
+  /** HTML template relative to project root, e.g. `sidepanel/index.html`. */
   html: string
-  /** 该 view 的 SPA 路由 hash 锚点 —— 用于无 history 路由时定位 */
+  /** SPA hash anchor for this view — used to route when there is no history API. */
   hash?: string
 }
 
 export interface SharedExtensionOptions {
-  /** 业务 views（侧边栏 / 弹窗 / 设置页 / ...） */
+  /** Business views (sidepanel / popup / options / ...). */
   views: ExtensionView[]
   /**
-   * UnoCSS 自动按需收集；开启后 `extraContentDirs` 与 `views` 内的 entry 都
-   * 会纳入扫描。
+   * Whether UnoCSS auto-collects on demand; when enabled, `extraContentDirs`
+   * and the entries inside `views` are scanned.
    */
   unocss?: boolean
-  /** 是否启用 Vue —— extension view 几乎都是 vue，不开 vue 用不上 */
+  /** Whether to enable Vue — extension views are almost always Vue, so this is rarely disabled. */
   vue?: boolean
-  /** 自定义 alias / plugin，由调用方合并进 vite config */
+  /** Custom aliases / plugins, merged into the vite config by the caller. */
   userConfig?: UserConfig
 }
 
 /**
- * 把绝对路径解析成相对 import.meta.url 的路径，
- * 方便在 package 内 import 其他工程文件。
+ * Resolve an absolute path into a path relative to `import.meta.url`,
+ * so a package can `import` other project files.
  */
 export interface SharedExtensionConfig {
   rootDir: string
