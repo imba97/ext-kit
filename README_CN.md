@@ -39,16 +39,19 @@ const m = defineMessaging({ namespace: 'my-ext' })
 const notes = defineStorage<{ id: string, body: string }[]>({
   key: 'notes',
   defaultValue: [],
-  backend: 'chrome-storage',
+  backend: 'chrome-storage'
 })
 
 m.handleBackgroundRequests({
-  listNotes: async () => (await notes.ready(), notes.value.value),
+  listNotes: async () => {
+    await notes.ready()
+    return notes.value.value
+  },
   addNote: async (raw) => {
     const next = [...notes.value.value, raw as { id: string, body: string }]
     await notes.set(next)
     return next.length
-  },
+  }
 })
 ````
 
@@ -60,7 +63,7 @@ import { defineStorage } from '@ext-kit/storage'
 const m = defineMessaging({ namespace: 'my-ext' })
 const notes = defineStorage<{ id: string, body: string }[]>({
   key: 'notes',
-  defaultValue: [],
+  defaultValue: []
 })
 await notes.ready()
 // 当后台调用 notes.set(...) 时，这里 notes.value 会自动更新
@@ -68,24 +71,24 @@ const count = await m.callBackground<number>('addNote', { id: 'n1', body: 'hi' }
 ````
 
 ````ts
-// vite.config.ts —— 所有页面共用一份配置工厂
-import { defineConfig } from 'vite'
 import {
   buildExtensionViews,
   defineBackgroundConfig,
-  defineSharedConfig,
+  defineSharedConfig
 } from '@ext-kit/vite-config'
+// vite.config.ts —— 所有页面共用一份配置工厂
+import { defineConfig } from 'vite'
 
 const shared = await defineSharedConfig({
   views: [
     { name: 'sidepanel', entry: 'sidepanel/main.ts', html: 'sidepanel/index.html' },
-    { name: 'options', entry: 'options/main.ts', html: 'options/index.html' },
-  ],
+    { name: 'options', entry: 'options/main.ts', html: 'options/index.html' }
+  ]
 })
 
 export default defineConfig([
   defineBackgroundConfig(shared, { entry: 'background/main.ts' }),
-  buildExtensionViews(shared),
+  buildExtensionViews(shared)
 ])
 ````
 
