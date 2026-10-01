@@ -9,6 +9,23 @@ import { isEnvelope, makeBroadcast, makeRequest } from './envelope'
  */
 export type BackgroundRequestHandler = (data: any) => unknown
 
+/**
+ * Resolve the injected `browser` global. Centralizes the `globalThis` cast
+ * that every messaging call site would otherwise repeat.
+ *
+ * `optional: true` lets `broadcastToPages` stay best-effort: if no browser
+ * is available (e.g. the script ran outside an extension context), it
+ * silently no-ops instead of throwing. The other three entry points keep
+ * the strict "throw if no browser" semantics — they cannot be useful
+ * without a real channel.
+ */
+function getBrowser(optional = false): Browser | undefined {
+  const browser = (globalThis as { browser?: Browser }).browser
+  if (!browser && !optional)
+    throw new Error('webextension-polyfill not available; call this from an extension context')
+  return browser
+}
+
 export interface MessagingOptions {
   /**
    * Namespace — must be globally unique.
@@ -45,20 +62,16 @@ export function defineMessaging(opts: MessagingOptions): MessagingApi {
 
   async function callBackground<T>(id: string, data?: unknown): Promise<T> {
     const message = makeRequest(opts.namespace, id, data)
-    const browser = (globalThis as { browser?: Browser }).browser
-    if (!browser)
-      throw new Error('webextension-polyfill not available; call this from an extension context')
-    const response = await browser.runtime.sendMessage(message) as T | undefined
+    const browser = getBrowser()
+    const response = await browser!.runtime.sendMessage(message) as T | undefined
     if (response === undefined)
       throw new Error(`Background did not respond to "${id}" — try refreshing the page or reopening the extension view`)
     return response
   }
 
   function handleBackgroundRequests(handlers: Record<string, BackgroundRequestHandler>): void {
-    const browser = (globalThis as { browser?: Browser }).browser
-    if (!browser)
-      throw new Error('webextension-polyfill not available; call this from an extension context')
-    browser.runtime.onMessage.addListener((message: unknown) => {
+    const browser = getBrowser()
+    browser!.runtime.onMessage.addListener((message: unknown) => {
       // Broadcasts are one-way; the background also receives its own broadcasts.
       // Only handle requests here.
       if (!check(message) || message.kind !== 'request')
@@ -85,7 +98,7 @@ export function defineMessaging(opts: MessagingOptions): MessagingApi {
   }
 
   function broadcastToPages<T>(id: string, data?: T): void {
-    const browser = (globalThis as { browser?: Browser }).browser
+    const browser = getBrowser(true)
     if (!browser)
       return
     const message = makeBroadcast<T>(opts.namespace, id, data)
@@ -95,15 +108,13 @@ export function defineMessaging(opts: MessagingOptions): MessagingApi {
   }
 
   function onPageBroadcast<T>(id: string, callback: (data: T) => void): () => void {
-    const browser = (globalThis as { browser?: Browser }).browser
-    if (!browser)
-      throw new Error('webextension-polyfill not available; call this from an extension context')
+    const browser = getBrowser()
     const listener = (message: unknown): void => {
       if (check(message) && message.kind === 'broadcast' && message.id === id)
         callback(message.data as T)
     }
-    browser.runtime.onMessage.addListener(listener)
-    return () => browser.runtime.onMessage.removeListener(listener)
+    browser!.runtime.onMessage.addListener(listener)
+    return () => browser!.runtime.onMessage.removeListener(listener)
   }
 
   return {

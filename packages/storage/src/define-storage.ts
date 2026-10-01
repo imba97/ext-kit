@@ -1,3 +1,4 @@
+import type { Ref } from 'vue'
 import type { DefineStorageOptions } from './types'
 import { computed, ref } from 'vue'
 import { createBackendDriver } from './backends'
@@ -37,8 +38,8 @@ import { createBackendDriver } from './backends'
  * native channels here.
  */
 export interface StorageApi<T> {
-  /** Current snapshot — a reactive ref. */
-  readonly value: ReturnType<typeof ref<T>>
+  /** Current snapshot — a reactive ref. May be `undefined` until `ready()` resolves on a missing key. */
+  readonly value: Ref<T | undefined>
   /** Promise that resolves after first load completes. Until awaited, `.value` may still be the default. */
   ready: () => Promise<void>
   /** Write — applies locally and broadcasts to other contexts via the backend. */
@@ -51,13 +52,13 @@ export function defineStorage<T>(opts: DefineStorageOptions<T>): StorageApi<T> {
   const backend = opts.backend ?? 'chrome-storage'
   const driver = createBackendDriver(backend, opts.key, opts.defaultValue)
 
-  const state = ref<T>(opts.defaultValue)
+  // Vue's `ref<T | undefined>(...)` returns `Ref<UnwrapRef<T | undefined> | undefined>`,
+  // which is structurally wider than `Ref<T | undefined>` for generic `T`
+  // (UnwrapRef can collapse nested refs / unwrap Promises). We want a plain
+  // `Ref<T | undefined>` for the public API, so we cast the storage cell.
+  const state = ref<T | undefined>(opts.defaultValue) as Ref<T | undefined>
   let initialized = false
   let initPromise: Promise<void> | undefined
-
-  function applyRaw(raw: unknown): void {
-    applySerialized(raw)
-  }
 
   async function doSet(next: T): Promise<void> {
     const serialized = opts.serialize ? opts.serialize(next) : next
@@ -65,19 +66,14 @@ export function defineStorage<T>(opts: DefineStorageOptions<T>): StorageApi<T> {
     await driver.write(serialized)
   }
 
-  function applySerialized(raw: unknown): void {
-    // If the caller provided `serialize`, what was written is raw; on read we
-    // must parse it back into the business object.
-    if (opts.serialize && opts.normalize) {
-      try {
-        state.value = opts.normalize(raw)
-        return
-      }
-      catch {
-        state.value = opts.defaultValue
-        return
-      }
-    }
+  /**
+   * Apply a raw value (as it sits in storage) to the reactive state.
+   *
+   * The browser may have older code than the page (MV3 SW does not refresh
+   * alongside a page reload), so normalize must be defensive — on parse
+   * failure we fall back to `defaultValue` rather than crash the app.
+   */
+  function applyRaw(raw: unknown): void {
     if (opts.normalize) {
       try {
         state.value = opts.normalize(raw)
@@ -132,6 +128,6 @@ export function defineStorage<T>(opts: DefineStorageOptions<T>): StorageApi<T> {
  * Build a `computed` view of a storage — useful with Pinia or in templates
  * such as `:value="records.value.x"`.
  */
-export function withComputed<T, R>(storage: StorageApi<T>, getter: (v: T) => R) {
-  return computed(() => getter(storage.value.value as T))
+export function withComputed<T, R>(storage: StorageApi<T>, getter: (v: T | undefined) => R) {
+  return computed(() => getter(storage.value.value))
 }

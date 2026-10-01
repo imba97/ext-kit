@@ -18,8 +18,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     pool: 'forks',
-    poolOptions: {
-      forks: { singleFork: true }
-    }
+    // vitest 4+: pool-scoped options live at the top level of `test`.
+    // `singleFork` was renamed to `maxWorkers: 1`.
+    maxWorkers: 1
   }
 })

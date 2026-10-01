@@ -1,5 +1,6 @@
 export * from './background'
 export * from './content'
+export * from './define-iife-entry'
 export * from './injected'
 export * from './shared'
 export * from './types'
