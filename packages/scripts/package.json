@@ -1,7 +1,7 @@
 {
   "name": "@ext-kit/scripts",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "packageManager": "pnpm@12.8.1",
   "description": "Build scripts for extension projects: manifest writer, view html stub, env helpers",
   "license": "MIT",
