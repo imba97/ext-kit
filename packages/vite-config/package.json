@@ -5,6 +5,14 @@
   "packageManager": "pnpm@12.8.1",
   "description": "Shared Vite config factory for browser extension projects (background / content / injected entries)",
   "license": "MIT",
+  "homepage": "https://github.com/imba97/ext-kit#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imba97/ext-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/imba97/ext-kit/issues"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",

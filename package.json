@@ -9,7 +9,7 @@
   "homepage": "https://github.com/imba97/ext-kit#readme",
   "repository": {
     "type": "git",
-    "url": "git@github.com:imba97/ext-kit.git"
+    "url": "git+https://github.com/imba97/ext-kit.git"
   },
   "bugs": {
     "url": "https://github.com/imba97/ext-kit/issues"
