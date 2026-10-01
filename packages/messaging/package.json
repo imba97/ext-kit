@@ -1,7 +1,7 @@
 {
   "name": "@ext-kit/messaging",
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "packageManager": "pnpm@12.8.1",
   "description": "Cross-context messaging between extension pages and background service worker",
   "license": "MIT",

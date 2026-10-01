@@ -1,7 +1,7 @@
 {
   "name": "@ext-kit/storage",
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "packageManager": "pnpm@12.8.1",
   "description": "Reactive cross-context storage with chrome-storage and indexed-db backends",
   "license": "MIT",
