@@ -20,8 +20,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12
+        # `packageManager` in package.json (pnpm@12.8.1) is read automatically;
+        # do NOT set `version` here — pinning it conflicts with the manifest.
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
