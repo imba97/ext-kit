@@ -8,6 +8,12 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Required for npm Trusted Publisher (OIDC); pnpm publishes via id-token
+    # when this is set, otherwise it tries to use `.npmrc` _authToken and
+    # fails with ERR_PNPM_ID_TOKEN_GITHUB_WORKFLOW_INCORRECT_PERMISSIONS.
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
