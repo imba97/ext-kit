@@ -2,7 +2,7 @@
   "name": "@ext-kit/vue-runtime",
   "type": "module",
   "version": "0.0.1",
-  "packageManager": "pnpm@12.6.0",
+  "packageManager": "pnpm@12.8.1",
   "description": "createExtensionApp + setupApp for Vue 3 extension pages (sidepanel / popup / options)",
   "license": "MIT",
   "exports": {

@@ -245,14 +245,14 @@ importers:
   packages/vite-config:
     dependencies:
       '@unocss/reset':
-        specifier: ^66.6.0
+        specifier: ^66.10.5
         version: 66.10.5
       unocss:
-        specifier: ^66.6.3
+        specifier: ^66.10.5
         version: 66.10.5(cac@7.0.0)(rolldown@1.2.11)(rollup@4.63.5)(srvx@1.0.5)(vite@8.3.1(@types/node@26.6.3)(jiti@2.7.0)(yaml@2.9.1))
     devDependencies:
       '@vitejs/plugin-vue':
-        specifier: ^6.0.1
+        specifier: ^6.0.9
         version: 6.0.9(vite@8.3.1(@types/node@26.6.3)(jiti@2.7.0)(yaml@2.9.1))(vue@3.5.43(@typescript/typescript6@6.0.2))
       vite:
         specifier: ^8.3.1

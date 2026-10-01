@@ -2,7 +2,7 @@
   "name": "@ext-kit/adapter-kit",
   "type": "module",
   "version": "0.0.1",
-  "packageManager": "pnpm@12.6.0",
+  "packageManager": "pnpm@12.8.1",
   "description": "Type skeletons for site adapters and external source adapters",
   "license": "MIT",
   "exports": {
